@@ -2,26 +2,23 @@
 package config
 
 import (
-	"database/sql"
+	"log"
 
 	_ "github.com/lib/pq"
-)
-
-const (
-	DBDriver     = "postgres"
-	DBDataSource = "postgresql://postgres:admin@localhost/auth_system_db?sslmode=disable"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 // InitDB initializes the database connection and returns a pointer to the database.
-func InitDB() (*sql.DB, error) {
-	db, err := sql.Open(DBDriver, DBDataSource)
-	if err != nil {
-		return nil, err
-	}
+func InitDB() (*gorm.DB, error) {
+	// Define your PostgreSQL database connection string
+	dsn := "user=postgres password=admin dbname=auth_system_db host=localhost port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 
-	// Test the database connection
-	if err := db.Ping(); err != nil {
-		return nil, err
+	// Connect to the PostgreSQL database
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal(err)
+		return db, err
 	}
 	return db, nil
 }

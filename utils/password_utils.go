@@ -2,38 +2,21 @@
 package utils
 
 import (
-	"auth-system/models"
-	"time"
-
-	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
-const jwtSecret = "your-secret-key"
-
-func GenerateToken(user models.User) (string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = user.ID
-	claims["username"] = user.Username
-	claims["role"] = user.Role
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
-
-	tokenString, err := token.SignedString([]byte(jwtSecret))
+// HashPassword takes a plain text password as input and returns its bcrypt hash.
+func HashPassword(password string) (string, error) {
+	// Generate a bcrypt hash of the password with a cost factor of 12
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
-
-	return tokenString, nil
+	return string(hashedPassword), nil
 }
 
-func VerifyToken(tokenString string) (*jwt.Token, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(jwtSecret), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
+// VerifyPassword verifies a plain text password against a hashed password.
+func VerifyPassword(hashedPassword, plainPassword string) error {
+	// Compare the hashed password with the plain password
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(plainPassword))
 }

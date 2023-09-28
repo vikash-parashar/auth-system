@@ -3,7 +3,7 @@ package routes
 
 import (
 	"auth-system/controllers"
-	"auth-system/utils"
+	"auth-system/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,9 +17,11 @@ func SetupRouter() *gin.Engine {
 
 	// Private routes (require authentication)
 	private := r.Group("/private")
-	private.Use(utils.AuthMiddleware("user"))
+	private.Use(middleware.AuthMiddleware("user"))
 	{
 		private.GET("/user", controllers.GetUser)
+		private.GET("/update", controllers.UpdateUser)
+		private.GET("/delete", controllers.DeleteUser)
 	}
 
 	return r

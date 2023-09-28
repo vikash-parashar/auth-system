@@ -4,33 +4,65 @@ package controllers
 import (
 	"auth-system/models"
 	"auth-system/utils"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"gorm.io/gorm"
 )
 
+var (
+	DB *gorm.DB
+)
+
+// Register user with email confirmation
 func Register(c *gin.Context) {
 	var user models.User
 	if err := c.BindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Hash the user's password
-	hashedPassword, err := utils.HashPassword(user.Password)
+	hashedPassqord, err := utils.HashPassword(user.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		log.Fatalln(err)
 		return
 	}
-	user.Password = hashedPassword
+	user.Password = hashedPassqord
+	DB.Create(&user)
 
-	// Insert the user into the database
-	_, err = db.Exec("INSERT INTO users (username, password, role) VALUES ($1, $2, $3)", user.Username, user.Password, user.Role)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+	c.JSON(http.StatusCreated, gin.H{"message": "success"})
+}
+
+// controllers/auth_controller.go
+func Login(c *gin.Context) {
+	var user models.User
+	if err := c.BindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
+	// Retrieve user from the database by username
+	DB.Where("email = ?", user.Email).First(&user)
+
+	// Verify the password
+	if err := utils.VerifyPassword(user.Password, user.Password); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	// Generate a JWT token and send it as a response
+	token, err := utils.GenerateToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "user logged in successfully", "token": token})
+}
+func UpdateUser(c *gin.Context) {
+	//TODO:
+}
+func DeleteUser(c *gin.Context) {
+	//TODO:
 }

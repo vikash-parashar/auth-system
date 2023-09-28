@@ -1,7 +1,8 @@
 // utils/auth_middleware.go
-package utils
+package middleware
 
 import (
+	"auth-system/utils"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -17,7 +18,7 @@ func AuthMiddleware(role string) gin.HandlerFunc {
 			return
 		}
 
-		token, err := VerifyToken(tokenString)
+		token, err := utils.VerifyToken(tokenString)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
